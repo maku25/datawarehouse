@@ -13,4 +13,3 @@ FAIT_PERFORMANCE : notes + avis positif/négatif + nb de visites
 FAIT_MARCHE_LOCAL : potentiel d'un quartier (visites totales vs nb de concurrents)
 
 FAIT_FIDELITE_CLIENT : capcité d'un commerce à faire revenir ses clients
-
