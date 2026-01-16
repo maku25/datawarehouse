@@ -1,0 +1,16 @@
+DIM_GEOGRAPHIE : localiser chaque commerce (ville, adresse, coordonnées gps) -> pr analyser les zones géographiques
+
+DIM_COMMERCE : infos de chaque commerce (nom, gamme de prix, services proposés parking reservations etc)
+
+DIM_TEMPS : situer chaque évenement ds le tempss (année, mois, jour)
+
+DIM_UTILISATEUR : infos sur les personnes qui laissent des avis
+
+DIM_PROFIL_CLIENT : classe les utilisateurs par rapport à leur comportement (client fidèle ou client simple)
+
+FAIT_PERFORMANCE : notes + avis positif/négatif + nb de visites
+
+FAIT_MARCHE_LOCAL : potentiel d'un quartier (visites totales vs nb de concurrents)
+
+FAIT_FIDELITE_CLIENT : capcité d'un commerce à faire revenir ses clients
+
