@@ -23,10 +23,11 @@ Le pipeline de données est structuré pour garantir performance et scalabilité
 ---
 
 ## 3. Modélisation : Schéma en Constellation
-Nous avons implémenté un **Schéma en Constellation (Galaxy Schema)**. Ce choix est justifié par la nécessité de piloter trois processus métiers distincts tout en partageant des dimensions communes (conformées) :
+Nous avons implémenté un **Schéma en Constellation (Galaxy Schema)**. Ce choix est justifié par la nécessité de piloter trois processus métiers distincts tout en partageant des dimensions communes (conformées) (à creuser encore plus après):
 
 * **FAIT_PERFORMANCE :** Évaluation de la satisfaction et de l'impact social.
 * **FAIT_MARCHE_LOCAL :** Analyse macro-économique des quartiers.
 * **FAIT_FIDELITE_CLIENT :** Analyse de la rétention et de la typologie des consommateurs.
 
 **Dimensions pivots :** Temps, Géographie, Commerce, Utilisateur.
+
