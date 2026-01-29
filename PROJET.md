@@ -1,4 +1,4 @@
-# Feuille de Route & État d'Avancement
+# Feuille de Route 
 
 ## État Actuel : Janvier 2026
 - [x] Accès serveurs Stendhal et Oracle validés.
