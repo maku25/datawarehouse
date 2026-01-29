@@ -1,58 +1,32 @@
-Projet innformatique décisionnelle
+# Projet BI : Aide à la décision pour investisseur (Yelp)
 
-étape 1 :
-obj métier = identifier les opportunités d'implantation et les pépites à acheter
+## 1. Vision et objectifs
+L'objectif de ce projet est de transformer la donnée brute issue de l'écosystème Yelp en un **outil décisionnel** pour un investisseur. 
 
-(on a pas les chiffres CA, benefs etc..)
+En l'absence de données financières privées (CA, marges), nous avons développé une approche basée sur des **indicateurs de substitution (proxys)** pour évaluer la valeur d'un commerce :
+* **Qualité de l'Engagement :** Analyse de la précision et de la pertinence des avis (longueur, votes).
+* **Dynamique de Flux :** Mesure de la popularité via les check-ins.
+* **Potentiel de Zone :** Analyse de la saturation géographique pour identifier les opportunités d'implantation.
 
-étape 2 : 
-approche kimball avec schéma en étoile
+---
 
-table de faits : FAIT_INVESTISSEMENT (mesures: notes, checkins, sentiment, votes)
-4 dims : DIM_BUSINESS (service, prix), DIM_GEO (quartiers, loc gps), DIM_TEMPS (saisons, années), DIM_UTILISATEUR (élites, influenceurs) 
+## 2. Architecture Technique
+Le pipeline de données est structuré pour garantir performance et scalabilité :
 
-script sql fait via sql developper
-
-
-
-- code spark (scala)
-
-
------
-## Obj du projet : 
-Ce projet vise à fournir un outil d'aide à la décision pour un investisseur dans le secteur des services (restaurants, bars, commerces). 
-
-L'objectif est de transformer les données brutes de Yelp pour répondre à trois problématiques majeures :
-- Performance : quels sont les établissements qui satisfont réellement leurs clients ?
-
-- Opportunité de marché : Quels quartiers sont sous-équipés ou en forte demande ?
-
-- Fidélisation : Quelle est la solidité de la base client d'un commerce ?
+1. **Sources hétérogènes :** - Base PostgreSQL (Avis, Utilisateurs).
+   - Fichiers JSON (Commerces, Check-ins).
+2. **Traitement ETL :** - Moteur **Apache Spark (Scala)** sur le serveur `stendhal`.
+3. **Stockage Décisionnel :** - Entrepôt **Oracle** sur le serveur `enss2025`.
 
 
-## Architecture de la solution : 
-Sources de données : Données hétérogènes (PostgreSQL pour les avis/utilisateurs, fichiers JSON pour les commerces/check-ins).
 
-Moteur etl (serv stendhal) : Utilisation de Spark (Scala) pour le nettoyage, la jointure et l'agrégation des données.
+---
 
-Entrepôt de données (serv enss2025) : Base de données Oracle structurée pour le décisionnel (Schéma en Constellation).
+## 3. Modélisation : Schéma en Constellation
+Nous avons implémenté un **Schéma en Constellation (Galaxy Schema)**. Ce choix est justifié par la nécessité de piloter trois processus métiers distincts tout en partageant des dimensions communes (conformées) :
 
-## Strat de modélisation
-### Schéma en constellation
-COntrairement à un schéma en étoile classique, nnous avons opté pour une consotellation de faits.
-Ce choix stratégique permet de partager des dimensions conformées entre plusieurs processus métiers.
+* **FAIT_PERFORMANCE :** Évaluation de la satisfaction et de l'impact social.
+* **FAIT_MARCHE_LOCAL :** Analyse macro-économique des quartiers.
+* **FAIT_FIDELITE_CLIENT :** Analyse de la rétention et de la typologie des consommateurs.
 
-**Avantages :**
-* Cohérence totale : une dim DIM_GEOGRAPHIE identique pour tous les rapports
-* Analyse croisée : Possibilité de corréler la note d'un établissement (`FAIT_PERFORMANCE`) avec l'attractivité de sa zone géographique (`FAIT_MARCHE`).
-
-## Matrice de bus (méthodologie Kimball)
-La matrice ci-dessous définit la granularité et les axes d'analyse de notre entrepôt de données.
-
-| Dimensions / Faits | FAIT_PERFORMANCE | FAIT_MARCHE_LOCAL | FAIT_FIDELITE_CLIENT |
-| :--- | :---: | :---: | :---: |
-| **DIM_TEMPS** | ✅ | ✅ | ✅ |
-| **DIM_GEOGRAPHIE** | ✅ | ✅ | |
-| **DIM_COMMERCE** | ✅ | ✅ | |
-| **DIM_UTILISATEUR** | ✅ | | |
-| **DIM_PROFIL_CLIENT** | | | ✅ |
+**Dimensions pivots :** Temps, Géographie, Commerce, Utilisateur.
