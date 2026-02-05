@@ -1,10 +1,10 @@
 # Feuille de Route 
 
-## État Actuel : Janvier 2026
+## État Actuel : Février 2026
 - [x] Accès serveurs Stendhal et Oracle validés.
 - [x] Modélisation logique finalisée (Constellation).
 - [x] Script SQL de création des tables exécuté sur `enss2025`.
-- [ ] Développement de la couche ETL Spark (Scala).
+- [ ] Développemenclt de la couche ETL Spark (Scala).
 - [ ] Recette et validation des indicateurs (KPI).
 
 ---
