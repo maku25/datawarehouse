@@ -1,1 +1,2 @@
-data/donnes_yelp/yelp_*
+data/donnees_yelp/*.json
+data/donnees_yelp/*.csv
