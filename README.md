@@ -5,9 +5,9 @@ les obj métier : aide à la décision pour un investisseur souhaitant racheter 
 - comprendre quels services spécifiques boostent la satisfaction client et la réputation.
 - vérifier si la popularité numérique (les notes) correspond à la fréquentation physique réelle.
 
-modélisation schéma : approche kimball en constellation (dim_fait.md)
+modélisation schéma : approche kimball en constellation (dim_fait.md) OK
 
-bd oracle (oracle.md)
+bd oracle (oracle.md) script à exécuter
 
 etl spark
 
