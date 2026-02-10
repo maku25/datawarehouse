@@ -6,7 +6,8 @@ object Main {
   def main(args: Array[String]): Unit = {
     
     val spark = SparkSession.builder()
-      .appName("yelp_etl")
+      .appName("Yelp_ETL_Master2_BDIA")
+      .master("local[*]") 
       .getOrCreate()
 
     import spark.implicits._
@@ -27,14 +28,13 @@ object Main {
     pgProps.setProperty("driver", "org.postgresql.Driver")
 
     val basePath = "/data/M2BDIA-ID-Ressources/dataset/"
-    val businessPath = basePath + "business.json"
-    val checkinPath = basePath + "checkin.json"
-    val tipPath = basePath + "tip.csv"
+    val businessPath = basePath + "yelp_academic_dataset_business.json"
+    val checkinPath = basePath + "yelp_academic_dataset_checkin.json"
+    val tipPath = basePath + "yelp_academic_dataset_tip.csv"
 
-    println("etl")
+    println("etl") 
 
-    //dim temps
-    println("traitement dim temps")
+    println("traitement dim temps") 
     val dimTemps = spark.sql("SELECT explode(sequence(to_date('2004-01-01'), to_date('2025-12-31'), interval 1 day)) as date_full")
       .select(
         date_format($"date_full", "yyyyMMdd").cast("int").as("DATE_ID"),
@@ -47,9 +47,11 @@ object Main {
         date_format($"date_full", "EEEE").as("JOUR_SEMAINE"),
         when(date_format($"date_full", "E").isin("Sat", "Sun"), 1).otherwise(0).as("EST_WEEKEND")
       )
-    dimTemps.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_TEMPS", oracleProps)
+    
+    dimTemps.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "DIM_TEMPS", oracleProps)
 
-    // dim geo
     println("traitement dim geo")
     val rawBusiness = spark.read.json(businessPath).cache()
     
@@ -63,10 +65,11 @@ object Main {
     ).distinct()
      .withColumn("GEO_ID", monotonically_increasing_id())
 
-    dimGeo.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_GEOGRAPHIE", oracleProps)
+    dimGeo.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "DIM_GEOGRAPHIE", oracleProps)
 
-    // dim commerce 
-    println("traitement dim commerce")
+    println("traitement dim commerce") 
     val dimCommerce = rawBusiness.join(dimGeo, Seq("address", "city", "state", "postal_code"))
       .select(
         $"business_id".as("COMMERCE_ID"),
@@ -82,20 +85,22 @@ object Main {
         when($"attributes.BusinessParking.garage" === "True", 1).otherwise(0).as("PARKING_GARAGE"),
         when($"attributes.BusinessParking.street" === "True", 1).otherwise(0).as("PARKING_RUE"),
         when($"attributes.BusinessAcceptsCreditCards" === "True", 1).otherwise(0).as("ACCEPTE_CB"),
-        when($"attributes.HasTV" === "True", 1).otherwise(0).as("TERRASSE"), // Exemple
-        when($"attributes.Ambience.romantic" === "True", 1).otherwise(0).as("MENU_VEGE"), // Adapté selon tes besoins
+        when($"attributes.HasTV" === "True", 1).otherwise(0).as("TERRASSE"),
+        when($"attributes.Ambience.romantic" === "True", 1).otherwise(0).as("MENU_VEGE"),
         when($"attributes.GoodForKids" === "True", 1).otherwise(0).as("ADAPTE_ENFANTS"),
         when($"attributes.RestaurantsDelivery" === "True", 1).otherwise(0).as("LIVRAISON"),
         when($"attributes.RestaurantsTakeOut" === "True", 1).otherwise(0).as("VENTE_A_EMPORTER"),
         when($"attributes.WheelchairAccessible" === "True", 1).otherwise(0).as("ACCES_HANDICAPE")
       )
-    dimCommerce.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_COMMERCE", oracleProps)
 
-    // dim utilisateur
+    dimCommerce.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "DIM_COMMERCE", oracleProps)
+
     println("traitement dim utilisateur")
     val dfUser = spark.read.format("jdbc")
       .option("url", pgUrl)
-      .option("dbtable", "\"user\"") // user est un mot réservé
+      .option("dbtable", "\"user\"") 
       .option("user", "tpid").option("password", "tpid")
       .option("partitionColumn", "spark_partition")
       .option("lowerBound", "0").option("upperBound", "100")
@@ -112,10 +117,12 @@ object Main {
       when($"elite".isNotNull && $"elite" =!= "", 1).otherwise(0).as("EST_ELITE"),
       size(split($"elite", ",")).as("NB_ANNEES_ELITE")
     )
-    dimUser.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_UTILISATEUR", oracleProps)
 
-    // fait review 
-    println("traitemnt fait review")
+    dimUser.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "DIM_UTILISATEUR", oracleProps)
+
+    println("traitement fait reviews")
     val dfReview = spark.read.format("jdbc")
       .option("url", pgUrl).option("dbtable", "review")
       .option("user", "tpid").option("password", "tpid")
@@ -133,9 +140,12 @@ object Main {
       $"funny".as("VOTES_DROLE"),
       $"cool".as("VOTES_COOL")
     )
-    faitReviews.write.mode(SaveMode.Append).jdbc(oracleUrl, "FAIT_REVIEWS", oracleProps)
 
-    // fait flux 
+    faitReviews.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "FAIT_REVIEWS", oracleProps)
+
+
     println("traitement fait flux")
     val faitFlux = spark.read.json(checkinPath)
       .withColumn("date_str", explode(split($"date", ",")))
@@ -146,9 +156,10 @@ object Main {
       .groupBy("COMMERCE_ID", "DATE_ID")
       .agg(count("*").as("NB_CHECKINS"))
 
-    faitFlux.write.mode(SaveMode.Append).jdbc(oracleUrl, "FAIT_FLUX", oracleProps)
+    faitFlux.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "FAIT_FLUX", oracleProps)
 
-    // fait tips
     println("traitement fait tips")
     val faitTips = spark.read.option("header", "true").csv(tipPath)
       .select(
@@ -157,9 +168,12 @@ object Main {
         date_format(to_date($"date"), "yyyyMMdd").cast("int").as("DATE_ID"),
         $"compliment_count".cast("int").as("NB_COMPLIMENTS")
       )
-    faitTips.write.mode(SaveMode.Append).jdbc(oracleUrl, "FAIT_TIPS", oracleProps)
 
-    println("etl terminé")
+    faitTips.write.mode(SaveMode.Overwrite)
+      .option("truncate", "true")
+      .jdbc(oracleUrl, "FAIT_TIPS", oracleProps)
+
+    println("ETL terminé avec succès")
     spark.stop()
   }
 }
