@@ -7,7 +7,7 @@ les obj métier : aide à la décision pour un investisseur souhaitant racheter 
 
 modélisation schéma : approche kimball en constellation (dim_fait.md) OK
 
-bd oracle (oracle.md) script à exécuter
+bd oracle (oracle.md) (sqlplus login/login@enss2025) OK
 
 etl spark
 
