@@ -9,7 +9,7 @@ modélisation schéma : approche kimball en constellation (dim_fait.md) OK
 
 bd oracle (oracle.md) (sqlplus login/login@enss2025) OK
 
-etl spark
+etl spark ok
 
 analyse et restitution
 
