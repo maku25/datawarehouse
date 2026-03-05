@@ -40,8 +40,8 @@ bd oracle (oracle.md) (sqlplus login/login@enss2025) OK
 
 etl spark OK
 
-analyse 
+analyse OK (à faire dans le rapport)
 
-restitution metabase
+restitution metabase OK
 
-rapport
+rapport à faire
