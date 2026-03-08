@@ -1,2 +1,3 @@
 data/donnees_yelp/*.json
 data/donnees_yelp/*.csv
+Metabase/*
