@@ -1,0 +1,21 @@
+Pour le rapport il faut faire : 
+
+[ ] Expliquer le "Pourquoi" des sources : Précise que le JSON (business.json) a été choisi pour sa flexibilité sur les attributs (WiFi, Parking), alors que PostgreSQL a été utilisé pour garantir l'intégrité des 7,7M d'avis.
+
+[ ] Justifier le choix des Check-ins : Explique explicitement dans le rapport que tu utilises FAIT_FLUX (check-ins) pour mesurer la fréquentation réelle et FAIT_REVIEWS pour mesurer la satisfaction. C'est une distinction métier très forte.
+
+[ ] Critique de la donnée : Mentionne que tu as dû traiter les valeurs nulles (ex: attributs de parking manquants) dans Spark pour éviter de fausser les moyennes.
+
+Intégration du SQL et du Dashboard (Section 4)
+
+[ ] En plus du Dashboard en Annexe : Insère tes captures d'écran directement dans le texte de la section 4 pour illustrer tes propos.
+
+[ ] Ajouter les requêtes SQL "Métier" : Pour chaque graphique, insère le bloc de code SQL correspondant. J'ai mis toutes les requêtes sql du dashboard sur le git dans requetes_sql_dashboard il faut les mettre dans le rapport requête par requête dans la partie 4 c les requêtes métier
+
+[ ] Rédiger l'Analyse des résultats : Pour chaque screen, explication en détail 
+
+[ ] Remplir le Tableau 3 (Benchmark) : C’est obligatoire selon le fascicule. Tu dois donner l'occupation disque (en Mo) de tes tables Oracle et le temps d'exécution de ton ETL Spark 
+
+Explication de pourquoi on a opter pour un schéma en constellation.
+
+[ ] Insérer le script Python d'exploration (dans le git data/donnes_yelp/business.py) : Place-le en début de Section 3 (ETL). Explication de à quoi ça nous a servit et pourquoi nous l'avons fait.
