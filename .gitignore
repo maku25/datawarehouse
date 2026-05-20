@@ -1,2 +1,21 @@
 data/donnees_yelp/*.json
 data/donnees_yelp/*.csv
+
+.env
+.env.local
+# --- Compilation Scala/sbt ---
+target/
+project/target/
+project/project/
+.bsp/
+
+metastore_db/
+derby.log
+spark-warehouse/
+
+.vscode/
+
+.DS_Store
+Thumbs.db
+
+*.log
