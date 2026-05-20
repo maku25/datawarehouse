@@ -1,4 +1,4 @@
-heatmap : 
+-- heatmap volume total de visites par état
 SELECT 
     G.ETAT, 
     SUM(F.NB_CHECKINS) AS TOTAL_VISITES
@@ -8,23 +8,7 @@ JOIN DIM_GEOGRAPHIE G ON C.GEO_ID = G.GEO_ID
 GROUP BY G.ETAT
 ORDER BY TOTAL_VISITES DESC
 
-volume de visites par ville :
-SELECT 
-    g.VILLE, g.ETAT,
-    ROUND(AVG(g.LATITUDE), 4) AS LATITUDE,
-    ROUND(AVG(g.LONGITUDE), 4) AS LONGITUDE,
-    COUNT(DISTINCT c.COMMERCE_ID) AS NB_RESTAURANTS,
-    NVL(SUM(f.NB_CHECKINS), 0) AS TOTAL_VISITES
-FROM DIM_GEOGRAPHIE g
-JOIN DIM_COMMERCE c ON g.GEO_ID = c.GEO_ID
-LEFT JOIN FAIT_FLUX f ON c.COMMERCE_ID = f.COMMERCE_ID
-WHERE c.CATEGORIES LIKE '%Restaurants%'
-GROUP BY g.VILLE, g.ETAT
-HAVING COUNT(DISTINCT c.COMMERCE_ID) > 30
-ORDER BY TOTAL_VISITES DESC
-
-
-top 5 villes : 
+-- top 5 des villes générant le + de visites (resto uniquement)
 SELECT 
     g.VILLE, g.ETAT,
     ROUND(AVG(g.LATITUDE), 4) AS LATITUDE,
@@ -41,8 +25,7 @@ ORDER BY TOTAL_VISITES DESC
 FETCH FIRST 5 ROWS ONLY
 
 
-Top 15 villes par Indice de Tension (restaurants)
-
+-- top 15 des villes par indice de tension (opportunités de marché)
 SELECT 
     g.VILLE, g.ETAT,
     COUNT(DISTINCT c.COMMERCE_ID) AS NB_RESTAURANTS,
@@ -63,7 +46,7 @@ ORDER BY INDICE_TENSION DESC
 FETCH FIRST 15 ROWS ONLY
 
 
-Volume par type de cuisine
+-- volume de visites et note moyenne par type de cuisine
 SELECT 
     FAMILLE_CUISINE,
     COUNT(DISTINCT COMMERCE_ID) AS NB_RESTAURANTS,
@@ -109,74 +92,8 @@ WHERE FAMILLE_CUISINE <> 'Autres'
 GROUP BY FAMILLE_CUISINE
 ORDER BY VISITES_PAR_RESTAURANT DESC
 
-
-
-Top 10 villes × meilleure famille cuisine
-SELECT VILLE, ETAT, FAMILLE_CUISINE, NOTE_MOY, NB_RESTAURANTS, INDICE_TENSION
-FROM (
-    SELECT 
-        g.VILLE, g.ETAT, sub.FAMILLE_CUISINE,
-        ROUND(AVG(r.NOTE), 2) AS NOTE_MOY,
-        COUNT(DISTINCT c.COMMERCE_ID) AS NB_RESTAURANTS,
-        ROUND(
-            (COUNT(r.REVIEW_ID) * 1.0 / NULLIF(COUNT(DISTINCT c.COMMERCE_ID), 0)) 
-            * (5 - AVG(r.NOTE)), 
-        2) AS INDICE_TENSION,
-        ROW_NUMBER() OVER (PARTITION BY g.VILLE ORDER BY 
-            (COUNT(r.REVIEW_ID) * 1.0 / NULLIF(COUNT(DISTINCT c.COMMERCE_ID), 0)) * (5 - AVG(r.NOTE)) DESC
-        ) AS RANG
-    FROM DIM_GEOGRAPHIE g
-    JOIN DIM_COMMERCE c ON g.GEO_ID = c.GEO_ID
-    JOIN PONT_COMMERCE_CATEGORIE pcc ON c.COMMERCE_ID = pcc.COMMERCE_ID
-    JOIN DIM_CATEGORIE cat ON pcc.CATEGORIE_ID = cat.CATEGORIE_ID
-    JOIN FAIT_REVIEWS r ON c.COMMERCE_ID = r.COMMERCE_ID
-    JOIN (
-        SELECT 'Americain' AS FAMILLE_CUISINE, 'American (New)' AS NOM FROM DUAL UNION ALL
-        SELECT 'Americain', 'American (Traditional)' FROM DUAL UNION ALL
-        SELECT 'Americain', 'Comfort Food' FROM DUAL UNION ALL
-        SELECT 'Italien / Pizza', 'Italian' FROM DUAL UNION ALL
-        SELECT 'Italien / Pizza', 'Pizza' FROM DUAL UNION ALL
-        SELECT 'Latino / Mexicain', 'Mexican' FROM DUAL UNION ALL
-        SELECT 'Latino / Mexicain', 'Tex-Mex' FROM DUAL UNION ALL
-        SELECT 'Latino / Mexicain', 'Tacos' FROM DUAL UNION ALL
-        SELECT 'Latino / Mexicain', 'Caribbean' FROM DUAL UNION ALL
-        SELECT 'Chinois', 'Chinese' FROM DUAL UNION ALL
-        SELECT 'Chinois', 'Cantonese' FROM DUAL UNION ALL
-        SELECT 'Japonais / Sushi', 'Japanese' FROM DUAL UNION ALL
-        SELECT 'Japonais / Sushi', 'Sushi Bars' FROM DUAL UNION ALL
-        SELECT 'Japonais / Sushi', 'Ramen' FROM DUAL UNION ALL
-        SELECT 'Asiatique autre', 'Thai' FROM DUAL UNION ALL
-        SELECT 'Asiatique autre', 'Vietnamese' FROM DUAL UNION ALL
-        SELECT 'Asiatique autre', 'Korean' FROM DUAL UNION ALL
-        SELECT 'Asiatique autre', 'Asian Fusion' FROM DUAL UNION ALL
-        SELECT 'Indien / Pakistanais', 'Indian' FROM DUAL UNION ALL
-        SELECT 'Indien / Pakistanais', 'Pakistani' FROM DUAL UNION ALL
-        SELECT 'Mediterraneen / Oriental', 'Mediterranean' FROM DUAL UNION ALL
-        SELECT 'Mediterraneen / Oriental', 'Greek' FROM DUAL UNION ALL
-        SELECT 'Mediterraneen / Oriental', 'Middle Eastern' FROM DUAL UNION ALL
-        SELECT 'Francais / Belge', 'French' FROM DUAL UNION ALL
-        SELECT 'Fruits de mer', 'Seafood' FROM DUAL UNION ALL
-        SELECT 'Grill / BBQ', 'Steakhouses' FROM DUAL UNION ALL
-        SELECT 'Grill / BBQ', 'Barbeque' FROM DUAL UNION ALL
-        SELECT 'Fast Food / Burgers', 'Burgers' FROM DUAL UNION ALL
-        SELECT 'Fast Food / Burgers', 'Fast Food' FROM DUAL UNION ALL
-        SELECT 'Fast Food / Burgers', 'Chicken Wings' FROM DUAL UNION ALL
-        SELECT 'Brunch / Petit-dej', 'Breakfast & Brunch' FROM DUAL UNION ALL
-        SELECT 'Sandwiches / Salades', 'Sandwiches' FROM DUAL UNION ALL
-        SELECT 'Sandwiches / Salades', 'Salad' FROM DUAL
-    ) sub ON cat.NOM_CATEGORIE = sub.NOM
-    WHERE c.CATEGORIES LIKE '%Restaurants%'
-    GROUP BY g.VILLE, g.ETAT, sub.FAMILLE_CUISINE
-    HAVING COUNT(DISTINCT c.COMMERCE_ID) >= 5 AND COUNT(r.REVIEW_ID) >= 30
-)
-WHERE RANG = 1
-ORDER BY INDICE_TENSION DESC
-FETCH FIRST 10 ROWS ONLY
-
-
-impact des services sur la note moyenne
+-- impact de la dispo des services sur la note
 WITH ServiceStats AS (
-    -- Services Binaires (0/1)
     SELECT 'Accepte CB' AS SERVICE, CASE WHEN ACCEPTE_CB = 1 THEN 'OUI' ELSE 'NON' END AS DISPO, NOTE_MOYENNE_SOURCE FROM DIM_COMMERCE WHERE (CATEGORIES LIKE '%Restaurants%' OR CATEGORIES LIKE '%Food%')
     UNION ALL
     SELECT 'Terrasse', CASE WHEN TERRASSE = 1 THEN 'OUI' ELSE 'NON' END, NOTE_MOYENNE_SOURCE FROM DIM_COMMERCE WHERE (CATEGORIES LIKE '%Restaurants%' OR CATEGORIES LIKE '%Food%')
@@ -190,7 +107,6 @@ WITH ServiceStats AS (
     SELECT 'Vente à emporter', CASE WHEN VENTE_A_EMPORTER = 1 THEN 'OUI' ELSE 'NON' END, NOTE_MOYENNE_SOURCE FROM DIM_COMMERCE WHERE (CATEGORIES LIKE '%Restaurants%' OR CATEGORIES LIKE '%Food%')
     UNION ALL
     SELECT 'Accès Handicapé', CASE WHEN ACCES_HANDICAPE = 1 THEN 'OUI' ELSE 'NON' END, NOTE_MOYENNE_SOURCE FROM DIM_COMMERCE WHERE (CATEGORIES LIKE '%Restaurants%' OR CATEGORIES LIKE '%Food%')
-    -- Services Textuels (Transformation en OUI/NON)
     UNION ALL
     SELECT 'WiFi', CASE WHEN (WIFI IS NOT NULL AND WIFI <> 'no') THEN 'OUI' ELSE 'NON' END, NOTE_MOYENNE_SOURCE FROM DIM_COMMERCE WHERE (CATEGORIES LIKE '%Restaurants%' OR CATEGORIES LIKE '%Food%')
     UNION ALL
@@ -205,7 +121,7 @@ GROUP BY SERVICE, DISPO
 ORDER BY SERVICE, DISPO DESC
 
 
-Top 5 national vs Top 5 même état
+-- top 5 national vs top 5 même état
 SELECT CLASSEMENT, RANG, NOM, VILLE, ETAT, NOTE_MOY, NB_AVIS, 
     "Terrasse", "Livraison", "WiFi", "Menu Végé", 
     "Accès Handicapé", "Adapté Enfants", "Vente à emporter"
@@ -266,7 +182,7 @@ WHERE RANG <= 5
 ORDER BY CLASSEMENT, RANG
 
 
-Corrélation nombre de services vs note
+-- corrélation nombre de services vs note
 SELECT 
     NB_SERVICES,
     COUNT(*) AS NB_RESTAURANTS,
@@ -285,7 +201,7 @@ GROUP BY NB_SERVICES
 ORDER BY NB_SERVICES
 
 
-commment les services varient selon le niveau de prix du restaurant
+--commment les services varient selon le niveau de prix du restaurant
 SELECT 
     CASE GAMME_PRIX 
         WHEN 1 THEN '1 - Cheap'
@@ -305,17 +221,17 @@ GROUP BY GAMME_PRIX
 ORDER BY GAMME_PRIX
 
 
-Répartition des profils
+--Répartition des profils
 SELECT * FROM V_DASHBOARD_PROFILS
 ORDER BY PROFIL_CLIENT
 
 
-Impact moyen par avis selon le profil
+--impact moyen par avis selon le profil
 SELECT * FROM V_DASHBOARD_PROFILS
 ORDER BY PROFIL_CLIENT
 
 
-Profil × type de cuisine préféré
+-- profil × type de cuisine préféré
 SELECT PROFIL, FAMILLE_CUISINE, NB_AVIS, NOTE_MOY
 FROM (
     SELECT 
@@ -382,29 +298,29 @@ WHERE FAMILLE_CUISINE IS NOT NULL AND RANG <= 5
 ORDER BY PROFIL, RANG
 
 
-KPI comparatifs
+-- kpi comparatifs
 SELECT PROFIL_CLIENT, NB_CLIENTS, NOTE_MOYENNE_DONNEE, MOYENNE_FANS, IMPACT_MOYEN
 FROM V_DASHBOARD_PROFILS
 ORDER BY PROFIL_CLIENT
 
-Courbes volume + note par mois
+--Courbes volume + note par mois
 SELECT * FROM V_DASHBOARD_SAISONNALITE
 ORDER BY MOIS
 
 
 
-Check-ins par mois
+--Check-ins par mois
 SELECT * FROM V_DASHBOARD_SAISONNALITE
 ORDER BY MOIS
 
 
-Score de saisonnalité(le meilleur mois pour ouvrir)
+-- Score de saisonnalité(le meilleur mois pour ouvrir)
 SELECT NOM_MOIS, SCORE_SAISONNALITE,
     RANK() OVER (ORDER BY SCORE_SAISONNALITE DESC) AS RANG
 FROM V_DASHBOARD_SAISONNALITE
 ORDER BY SCORE_SAISONNALITE DESC
 
-Weekend vs Semaine
+-- Weekend vs Semaine
 SELECT 
     CASE WHEN t.EST_WEEKEND = 1 THEN 'WEEKEND' ELSE 'SEMAINE' END AS PERIODE,
     COUNT(r.REVIEW_ID) AS NB_AVIS,
