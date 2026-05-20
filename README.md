@@ -1,4 +1,6 @@
-# Pipeline ETL hétérogène & datawarehouse Yelp (Oracle)
+# yelp-datawarehouse-spark
+
+## Pipeline ETL hétérogène & datawarehouse Yelp (Oracle)
 
 [![Language: Scala](https://img.shields.io/badge/Language-Scala%2094%25-red?style=flat-square)](https://www.scala-lang.org/)
 [![Language: Python](https://img.shields.io/badge/Language-Python%206%25-blue?style=flat-square)](https://www.python.org/)
