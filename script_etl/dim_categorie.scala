@@ -8,23 +8,29 @@ object Main {
     import spark.implicits._
     JdbcDialects.registerDialect(new OracleDialect)
 
-    val login = "mb084205"
+    // credentials lus depuis l'environnement (cf .env)
+    val oracleUser = sys.env("ORACLE_USER")
+    val oraclePassword = sys.env("ORACLE_PASSWORD")
+
     val oracleUrl = "jdbc:oracle:thin:@//stendhal.iem:1521/enss2025"
     val oracleProps = new java.util.Properties()
-    oracleProps.setProperty("user", login)
-    oracleProps.setProperty("password", login)
+    oracleProps.setProperty("user", oracleUser)
+    oracleProps.setProperty("password", oraclePassword)
     oracleProps.setProperty("driver", "oracle.jdbc.OracleDriver")
 
-    // Lire DIM_COMMERCE depuis Oracle
+    // on relit dim_commerce pour recuperer la colonne categories (csv en texte)
     println("Lecture DIM_COMMERCE depuis Oracle...")
     val dimCommerce = spark.read.format("jdbc")
       .option("url", oracleUrl).option("dbtable", "DIM_COMMERCE")
-      .option("user", login).option("password", login)
+      .option("user", oracleUser).option("password", oraclePassword)
       .option("driver", "oracle.jdbc.OracleDriver").load()
       .select("COMMERCE_ID", "CATEGORIES").cache()
     println(s"   -> ${dimCommerce.count()} commerces")
 
-    println("=== [4/8] DIM_CATEGORIE + PONT ===")
+    println("=== [4/8] dim_categorie + pont ===")
+
+    // chaque commerce a une string du genre "Pizza, Italian, Restaurants"
+    // on la split sur la virgule pour avoir une ligne par couple (commerce, categorie)
     val categoriesExploded = dimCommerce
       .filter($"CATEGORIES".isNotNull)
       .select(
@@ -34,6 +40,7 @@ object Main {
       .filter($"NOM_CATEGORIE" =!= "" && $"NOM_CATEGORIE".isNotNull)
       .withColumn("NOM_CATEGORIE", trim($"NOM_CATEGORIE"))
 
+    // table de dimension : liste unique des categories avec un id
     val dimCategorie = categoriesExploded
       .select("NOM_CATEGORIE")
       .distinct()
@@ -42,6 +49,7 @@ object Main {
     dimCategorie.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_CATEGORIE", oracleProps)
     println(s"   -> ${dimCategorie.count()} categories")
 
+    // table de pont : on associe chaque commerce a ses categories (relation n-n)
     val pontCommCat = categoriesExploded
       .join(dimCategorie, Seq("NOM_CATEGORIE"), "inner")
       .select("COMMERCE_ID", "CATEGORIE_ID")

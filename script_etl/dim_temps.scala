@@ -8,14 +8,20 @@ object Main {
     import spark.implicits._
     JdbcDialects.registerDialect(new OracleDialect)
 
-    val login = "mb084205"
+    // credentials lus depuis l'environnement (cf .env a la racine, gitignore)
+    // si la variable n'existe pas -> ca plante direct, c'est voulu
+    val oracleUser = sys.env("ORACLE_USER")
+    val oraclePassword = sys.env("ORACLE_PASSWORD")
+
     val oracleUrl = "jdbc:oracle:thin:@//stendhal.iem:1521/enss2025"
     val oracleProps = new java.util.Properties()
-    oracleProps.setProperty("user", login)
-    oracleProps.setProperty("password", login)
+    oracleProps.setProperty("user", oracleUser)
+    oracleProps.setProperty("password", oraclePassword)
     oracleProps.setProperty("driver", "oracle.jdbc.OracleDriver")
 
-    println("=== [1/8] DIM_TEMPS ===")
+    println("=== [1/8] dim_temps ===")
+
+    // calendrier complet 2004-2025, un enregistrement par jour
     val dimTemps = spark.sql("SELECT explode(sequence(to_date('2004-01-01'), to_date('2025-12-31'), interval 1 day)) as d")
       .select(
         date_format($"d", "yyyyMMdd").cast("int").as("DATE_ID"),
@@ -28,6 +34,7 @@ object Main {
         date_format($"d", "EEEE").as("JOUR_SEMAINE"),
         when(date_format($"d", "E").isin("Sat", "Sun"), 1).otherwise(0).as("EST_WEEKEND")
       ).distinct()
+
     dimTemps.write.mode(SaveMode.Append).jdbc(oracleUrl, "DIM_TEMPS", oracleProps)
     println(s"   -> DONE: ${dimTemps.count()} lignes")
 
